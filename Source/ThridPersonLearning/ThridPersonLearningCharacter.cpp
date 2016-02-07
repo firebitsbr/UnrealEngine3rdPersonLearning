@@ -3,6 +3,7 @@
 #include "ThridPersonLearning.h"
 #include "ThridPersonLearningCharacter.h"
 #include "Pickup.h"
+#include "BatteryPickup.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AThridPersonLearningCharacter
@@ -44,6 +45,9 @@ AThridPersonLearningCharacter::AThridPersonLearningCharacter()
 	CollectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("CollectionSphere"));
 	CollectionSphere->AttachTo(RootComponent);
 	CollectionSphere->SetSphereRadius(200);
+
+	InitialPowerLevel = 2000.0f;
+	CurrentPowerLevel = InitialPowerLevel;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -137,13 +141,38 @@ void AThridPersonLearningCharacter::CollectPickups()
 {
 	TArray<AActor*> CollectedActors;
 	CollectionSphere->GetOverlappingActors(CollectedActors);
+	float CollectedPower = 0.0f;
 	for(int32 iCollected = 0; iCollected < CollectedActors.Num(); ++iCollected)
 	{
 		APickup* const TestPickup = Cast<APickup>(CollectedActors[iCollected]);
 		if(TestPickup && !TestPickup->IsPendingKillPending() && TestPickup->IsActive())
 		{
 			TestPickup->WasCollected();
+			ABatteryPickup* const BatteryPickup = Cast<ABatteryPickup>(TestPickup);
+			if(BatteryPickup)
+			{
+				CollectedPower += BatteryPickup->GetBatteryPower();
+			}
 			TestPickup->setActive(false);
 		}
 	}
+	if(CollectedPower > 0.0f)
+	{
+		UpdatePower(CollectedPower);
+	}
+}
+
+float AThridPersonLearningCharacter::GetInitialPowerLevel()
+{
+	return InitialPowerLevel;
+}
+
+float AThridPersonLearningCharacter::GetCurrentPowerLevel()
+{
+	return CurrentPowerLevel;
+}
+
+void AThridPersonLearningCharacter::UpdatePower(float PowerChange)
+{
+	CurrentPowerLevel = CurrentPowerLevel + PowerChange;
 }

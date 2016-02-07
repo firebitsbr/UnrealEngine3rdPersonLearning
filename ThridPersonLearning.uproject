@@ -12,5 +12,15 @@
 				"Engine"
 			]
 		}
+	],
+	"Plugins": [
+		{
+			"Name": "NUTUnrealEngine4",
+			"Enabled": true
+		},
+		{
+			"Name": "NetcodeUnitTest",
+			"Enabled": true
+		}
 	]
 }
