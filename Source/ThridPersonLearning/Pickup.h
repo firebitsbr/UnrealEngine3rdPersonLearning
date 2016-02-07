@@ -28,6 +28,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Pickup")
 	void setActive(bool PickupState);
 
+	UFUNCTION(BlueprintNativeEvent)
+	void WasCollected();
+	virtual void WasCollected_Implementation();
+
 protected:
 	bool bIsActive;
 

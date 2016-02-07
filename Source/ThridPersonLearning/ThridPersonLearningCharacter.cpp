@@ -2,6 +2,7 @@
 
 #include "ThridPersonLearning.h"
 #include "ThridPersonLearningCharacter.h"
+#include "Pickup.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AThridPersonLearningCharacter
@@ -39,6 +40,10 @@ AThridPersonLearningCharacter::AThridPersonLearningCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+
+	CollectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("CollectionSphere"));
+	CollectionSphere->AttachTo(RootComponent);
+	CollectionSphere->SetSphereRadius(200);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -50,6 +55,8 @@ void AThridPersonLearningCharacter::SetupPlayerInputComponent(class UInputCompon
 	check(InputComponent);
 	InputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	InputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+
+	InputComponent->BindAction("Collect", IE_Pressed, this, &AThridPersonLearningCharacter::CollectPickups);
 
 	InputComponent->BindAxis("MoveForward", this, &AThridPersonLearningCharacter::MoveForward);
 	InputComponent->BindAxis("MoveRight", this, &AThridPersonLearningCharacter::MoveRight);
@@ -123,5 +130,20 @@ void AThridPersonLearningCharacter::MoveRight(float Value)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
+	}
+}
+
+void AThridPersonLearningCharacter::CollectPickups()
+{
+	TArray<AActor*> CollectedActors;
+	CollectionSphere->GetOverlappingActors(CollectedActors);
+	for(int32 iCollected = 0; iCollected < CollectedActors.Num(); ++iCollected)
+	{
+		APickup* const TestPickup = Cast<APickup>(CollectedActors[iCollected]);
+		if(TestPickup && !TestPickup->IsPendingKillPending() && TestPickup->IsActive())
+		{
+			TestPickup->WasCollected();
+			TestPickup->setActive(false);
+		}
 	}
 }
