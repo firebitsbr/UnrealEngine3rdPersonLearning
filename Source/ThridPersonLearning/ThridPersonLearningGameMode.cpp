@@ -4,6 +4,7 @@
 #include "ThridPersonLearningGameMode.h"
 #include "ThridPersonLearningCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Blueprint/UserWidget.h"
 
 AThridPersonLearningGameMode::AThridPersonLearningGameMode()
 {
@@ -16,15 +17,41 @@ AThridPersonLearningGameMode::AThridPersonLearningGameMode()
 	DecayRate = 0.01f;
 }
 
+void AThridPersonLearningGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	AThridPersonLearningCharacter* MyCharacter = Cast<AThridPersonLearningCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
+	if(MyCharacter)
+	{
+		PowerToWin = (MyCharacter->GetInitialPowerLevel()) * 1.25f;
+	}
+
+	if(HUDWidgetClass != nullptr)
+	{
+		CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), HUDWidgetClass);
+		if(CurrentWidget != nullptr)
+		{
+			CurrentWidget->AddToViewport();
+		}
+	}
+}
+
 
 void AThridPersonLearningGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	UE_LOG(LogClass, Log, TEXT("GameModeTick %f"), DeltaTime);
+	//UE_LOG(LogClass, Log, TEXT("GameModeTick %f"), DeltaTime);
 	//UE_LOG(LogClass, Log, TEXT("GameModeTick %f"), DeltaTime);
 	AThridPersonLearningCharacter* MyCharacter = Cast<AThridPersonLearningCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
-	if(MyCharacter && MyCharacter->GetCurrentPowerLevel() < 0.0f)
+	if(MyCharacter && MyCharacter->GetCurrentPowerLevel() > 0.0f)
 	{
+		//UE_LOG(LogClass, Log, TEXT("Character Powerl level %f"), MyCharacter->GetCurrentPowerLevel());
 		MyCharacter->UpdatePower(-DeltaTime*DecayRate*(MyCharacter->GetInitialPowerLevel()));
 	}
+}
+
+float AThridPersonLearningGameMode::GetPowerToWin() const
+{
+	return PowerToWin;
 }

@@ -48,6 +48,9 @@ AThridPersonLearningCharacter::AThridPersonLearningCharacter()
 
 	InitialPowerLevel = 2000.0f;
 	CurrentPowerLevel = InitialPowerLevel;
+
+	SpeedFactor = 0.75f;
+	BaseSpeed = 10.0f;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -175,4 +178,6 @@ float AThridPersonLearningCharacter::GetCurrentPowerLevel()
 void AThridPersonLearningCharacter::UpdatePower(float PowerChange)
 {
 	CurrentPowerLevel = CurrentPowerLevel + PowerChange;
+	GetCharacterMovement()->MaxWalkSpeed = BaseSpeed + SpeedFactor * CurrentPowerLevel;
+	PowerChangeEvent();
 }

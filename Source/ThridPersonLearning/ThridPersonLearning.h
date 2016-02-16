@@ -3,6 +3,6 @@
 #ifndef __THRIDPERSONLEARNING_H__
 #define __THRIDPERSONLEARNING_H__
 
-#include "EngineMinimal.h"
+#include "Engine.h"
 
 #endif
