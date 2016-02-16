@@ -20,10 +20,11 @@ AThridPersonLearningGameMode::AThridPersonLearningGameMode()
 void AThridPersonLearningGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	UE_LOG(LogClass, Log, TEXT("GameModeTick %f"), DeltaTime);
 	//UE_LOG(LogClass, Log, TEXT("GameModeTick %f"), DeltaTime);
-	AThridPersonLearningCharacter* MyCharacter = Cast<AThridPersonLearningCharacter>(UGameplayStatics::GetPlayerPawn(this, 9));
+	AThridPersonLearningCharacter* MyCharacter = Cast<AThridPersonLearningCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
 	if(MyCharacter && MyCharacter->GetCurrentPowerLevel() < 0.0f)
 	{
-		MyCharacter->UpdatePower(-(DeltaTime*DecayRate*(MyCharacter->GetInitialPowerLevel())));
+		MyCharacter->UpdatePower(-DeltaTime*DecayRate*(MyCharacter->GetInitialPowerLevel()));
 	}
 }
