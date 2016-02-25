@@ -3,6 +3,15 @@
 #include "GameFramework/GameMode.h"
 #include "ThridPersonLearningGameMode.generated.h"
 
+UENUM(BlueprintType)
+enum class EBatteryPlayState
+{
+	EPlaying,
+	EGameOver,
+	EWon,
+	EUnknown
+};
+
 UCLASS(minimalapi)
 class AThridPersonLearningGameMode : public AGameMode
 {
@@ -18,6 +27,11 @@ public:
 
 	virtual void BeginPlay() override;
 
+	void SetCurrentState(EBatteryPlayState ps);
+
+	UFUNCTION(BlueprintPure, Category = "Power")
+	EBatteryPlayState GetCurrentState() const;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Power", Meta = (BlueprintProtected))
 	float DecayRate;
@@ -30,6 +44,13 @@ protected:
 
 	UPROPERTY()
 	class UUserWidget* CurrentWidget;
+
+private:
+	EBatteryPlayState CurrentState;
+
+	TArray<class ASpawnVolume*> SpawnVolumeActors;
+
+	void HandleNewState(EBatteryPlayState NewState);
 };
 
 

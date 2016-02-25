@@ -5,6 +5,7 @@
 #include "ThridPersonLearningCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
+#include "SpawnVolume.h"
 
 AThridPersonLearningGameMode::AThridPersonLearningGameMode()
 {
@@ -20,7 +21,17 @@ AThridPersonLearningGameMode::AThridPersonLearningGameMode()
 void AThridPersonLearningGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASpawnVolume::StaticClass(), FoundActors);
+	for(auto Actor: FoundActors)
+	{
+		ASpawnVolume* SpawnVolumeActor = Cast<ASpawnVolume>(Actor);
+		if(SpawnVolumeActor)
+		{
+			SpawnVolumeActors.AddUnique(SpawnVolumeActor);
+		}
+	}
+	SetCurrentState(EBatteryPlayState::EPlaying);
 	AThridPersonLearningCharacter* MyCharacter = Cast<AThridPersonLearningCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
 	if(MyCharacter)
 	{
@@ -35,6 +46,8 @@ void AThridPersonLearningGameMode::BeginPlay()
 			CurrentWidget->AddToViewport();
 		}
 	}
+
+
 }
 
 
@@ -44,14 +57,84 @@ void AThridPersonLearningGameMode::Tick(float DeltaTime)
 	//UE_LOG(LogClass, Log, TEXT("GameModeTick %f"), DeltaTime);
 	//UE_LOG(LogClass, Log, TEXT("GameModeTick %f"), DeltaTime);
 	AThridPersonLearningCharacter* MyCharacter = Cast<AThridPersonLearningCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
-	if(MyCharacter && MyCharacter->GetCurrentPowerLevel() > 0.0f)
+	if(MyCharacter)
 	{
-		//UE_LOG(LogClass, Log, TEXT("Character Powerl level %f"), MyCharacter->GetCurrentPowerLevel());
-		MyCharacter->UpdatePower(-DeltaTime*DecayRate*(MyCharacter->GetInitialPowerLevel()));
+		if(MyCharacter->GetCurrentPowerLevel() > PowerToWin)
+		{
+			SetCurrentState(EBatteryPlayState::EWon);
+		}
+		else if(MyCharacter->GetCurrentPowerLevel() > 0.0f)
+		{
+			//UE_LOG(LogClass, Log, TEXT("Character Powerl level %f"), MyCharacter->GetCurrentPowerLevel());
+			MyCharacter->UpdatePower(-DeltaTime*DecayRate*(MyCharacter->GetInitialPowerLevel()));
+		}
+		else
+		{
+			SetCurrentState(EBatteryPlayState::EGameOver);
+		}
 	}
 }
 
 float AThridPersonLearningGameMode::GetPowerToWin() const
 {
 	return PowerToWin;
+}
+
+EBatteryPlayState AThridPersonLearningGameMode::GetCurrentState() const
+{
+	return CurrentState;
+}
+
+void AThridPersonLearningGameMode::SetCurrentState(EBatteryPlayState ps)
+{
+	CurrentState = ps;
+	AThridPersonLearningGameMode::HandleNewState(ps);
+}
+
+void AThridPersonLearningGameMode::HandleNewState(EBatteryPlayState NewState)
+{
+	switch (NewState) {
+		case EBatteryPlayState::EPlaying:
+		{
+			for(ASpawnVolume* Volumn: SpawnVolumeActors)
+			{
+				Volumn->SetSpawningActive(true);
+			}
+		}
+			break;
+		case EBatteryPlayState::EWon:
+		{
+			for(ASpawnVolume* Volumn: SpawnVolumeActors)
+			{
+				Volumn->SetSpawningActive(false);
+			}
+		}
+			break;
+		case EBatteryPlayState::EGameOver:
+		{
+			for(ASpawnVolume* Volumn: SpawnVolumeActors)
+			{
+				Volumn->SetSpawningActive(false);
+			}
+			APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
+			if(PlayerController)
+			{
+				PlayerController->SetCinematicMode(true, false, false, true, true);
+			}
+			ACharacter* MyCharacter = UGameplayStatics::GetPlayerCharacter(this, 0);
+			if(MyCharacter)
+			{
+				MyCharacter->GetMesh()->SetSimulatePhysics(true);
+				MyCharacter->GetMovementComponent()->MovementState.bCanJump = false;
+			}
+		}
+			break;
+		case EBatteryPlayState::EUnknown:
+		{
+
+		}
+			break;
+		default:
+			break;
+	}
 }
